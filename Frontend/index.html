@@ -135,7 +135,12 @@
 
         async function fetchWorkbooks() {
             try {
-                let response = await fetch("http://127.0.0.1:3000/get-workbooks", { credentials: "include" });
+                let response = await fetch("http://127.0.0.1:3000/get-workbooks", {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include"
+                });
+
                 let data = await response.json();
                 let selector = document.getElementById('workbookSelector');
                 selector.innerHTML = '<option value="">-- Select a Workbook --</option>'; // Reset dropdown
@@ -204,6 +209,7 @@
                     body: JSON.stringify({ query: query }),
                     credentials: "include"
                 });
+
 
                 let data = await response.json();
 
