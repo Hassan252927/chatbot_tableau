@@ -190,27 +190,27 @@
         }
 
        async function askGPT() {
-        let queryInput = document.getElementById("queryInput");
-        let query = queryInput.value.trim();
-        let workbookId = document.getElementById("workbookSelector").value;  // ✅ Get selected workbook ID
+    let queryInput = document.getElementById("queryInput");
+    let query = queryInput.value.trim();
+    let workbookId = document.getElementById("workbookSelector").value;  // ✅ Get selected workbook ID
 
-        if (!query) {
-            alert("Please enter a question!");
-            return;
-        }
+    if (!query) {
+        alert("Please enter a question!");
+        return;
+    }
 
-        if (!workbookId) {
-            alert("Please select a workbook first!");
-            return;
-        }
+    if (!workbookId) {
+        alert("Please select a workbook first!");
+        return;
+    }
 
-        // ✅ Add User Message to Chatbox
-        document.getElementById("chatbox").innerHTML += `<p><b>You:</b> ${query}</p>`;
-        queryInput.value = "";
-        queryInput.focus();
+    // ✅ Add User Message to Chatbox
+    document.getElementById("chatbox").innerHTML += `<p><b>You:</b> ${query}</p>`;
+    queryInput.value = "";
+    queryInput.focus();
 
-        try {
-            let response = await fetch("https://chatbottableau-production.up.railway.app/chatbot", {  // ✅ Updated API
+    try {
+        let response = await fetch("https://chatbottableau-production.up.railway.app/chatbot", {  // ✅ Updated API
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
@@ -229,11 +229,12 @@
             document.getElementById("chatbox").innerHTML += `<p><b>Bot:</b> ${data.response}</p>`;
         }
 
-    }     catch (error) {
-            console.error("❌ Error in chatbot request:", error);
-            document.getElementById("chatbox").innerHTML += `<p style="color:red;"><b>Error:</b> Chatbot request failed</p>`;
-        }
+    } catch (error) {
+        console.error("❌ Error in chatbot request:", error);
+        document.getElementById("chatbox").innerHTML += `<p style="color:red;"><b>Error:</b> Chatbot request failed</p>`;
     }
+}
+
 
 
 
