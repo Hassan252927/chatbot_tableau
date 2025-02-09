@@ -1,0 +1,9 @@
+flask
+gunicorn
+gevent>=1.4
+flask-cors
+flask-session
+openai
+pandas
+requests
+prophet
