@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau Chatbot</title>
+    <style>
+        /* 🌌 General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0d1117;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: #fff; /* White text instead of neon */
+            text-shadow: none; /* Remove glow */
+            animation: none; /* Remove animation */
+        }
+
+        /* 🏆 Chatbox */
+        #chatbox {
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            margin: 20px auto;
+            padding: 15px;
+            border: 2px solid #0ff;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 15px #0ff;
+            border-radius: 10px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        #chatbox p {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+        #chatbox p b {
+            color: #0ff;
+        }
+
+        /* 💡 Neon Select Dropdown */
+        #workbookSelector {
+            width: 60%;
+            padding: 10px;
+            font-size: 18px;
+            color: #0ff;
+            background: #1a1a2e;
+            border: 2px solid #0ff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #0ff;
+            transition: 0.3s;
+        }
+
+        #workbookSelector:hover {
+            box-shadow: 0 0 20px #0ff;
+        }
+
+        /* 🎤 Chat Input */
+        #queryInput {
+            width: 60%;
+            padding: 12px;
+            font-size: 18px;
+            color: #0ff;
+            background: #1a1a2e;
+            border: 2px solid #0ff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #0ff;
+            transition: 0.3s;
+            outline: none;
+        }
+
+        #queryInput:focus {
+            box-shadow: 0 0 20px #0ff;
+        }
+
+        /* 🔘 Neon Button */
+        button {
+            padding: 12px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+            background: #0ff;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 0 15px #0ff;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            box-shadow: 0 0 25px #0ff;
+            transform: scale(1.1);
+        }
+
+        /* ✨ Scroll Bar Customization */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #0ff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #0ff;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>🚀 Tableau Chatbot</h2>
+    
+    <label for="workbookSelector">📂 Select Workbook:</label>
+    <select id="workbookSelector">
+        <option value="">-- Select a Workbook --</option>
+    </select>
+
+    <div id="chatbox"></div>
+    
+    <input type="text" id="queryInput" placeholder="Type your query here..." onkeypress="handleEnter(event)" />
+    <button onclick="askGPT()">Send</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchWorkbooks();
+            document.getElementById("workbookSelector").addEventListener("change", selectWorkbook);
+        });
+
+        async function fetchWorkbooks() {
+            try {
+                let response = await fetch("http://127.0.0.1:3000/get-workbooks", { credentials: "include" });
+                let data = await response.json();
+                let selector = document.getElementById('workbookSelector');
+                selector.innerHTML = '<option value="">-- Select a Workbook --</option>'; // Reset dropdown
+
+                if (data.error) {
+                    console.error("Error fetching workbooks:", data.error);
+                    return;
+                }
+
+                data.workbooks.forEach(workbook => {
+                    let option = document.createElement('option');
+                    option.value = workbook.id;
+                    option.textContent = workbook.name;
+                    selector.appendChild(option);
+                });
+
+                console.log("✅ Workbooks Loaded Successfully");
+
+            } catch (error) {
+                console.error("❌ Error fetching workbooks:", error);
+            }
+        }
+
+        async function selectWorkbook(event) {
+            event.preventDefault();
+
+            let workbookId = document.getElementById('workbookSelector').value;
+            if (!workbookId) {
+                alert("Please select a workbook!");
+                return;
+            }
+
+            let response = await fetch("http://127.0.0.1:3000/select-workbook", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ workbook_id: workbookId }),
+                credentials: "include"
+            });
+
+            let data = await response.json();
+            if (data.error) {
+                alert(data.error);
+            } else {
+                console.log("✅ Workbook selected:", workbookId);
+                localStorage.setItem("selectedWorkbook", workbookId);
+            }
+        }
+
+        async function askGPT() {
+            let queryInput = document.getElementById("queryInput");
+            let query = queryInput.value.trim();
+
+            if (!query) {
+                alert("Please enter a question!");
+                return;
+            }
+
+            document.getElementById("chatbox").innerHTML += `<p><b>You:</b> ${query}</p>`;
+            queryInput.value = "";
+            queryInput.focus();
+
+            try {
+                let response = await fetch("http://127.0.0.1:3000/chatbot", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query: query }),
+                    credentials: "include"
+                });
+
+                let data = await response.json();
+
+                if (data.error) {
+                    document.getElementById("chatbox").innerHTML += `<p style="color:red;"><b>Error:</b> ${data.error}</p>`;
+                } else {
+                    document.getElementById("chatbox").innerHTML += `<p><b>Bot:</b> ${data.response}</p>`;
+                }
+
+                scrollToBottom();
+
+            } catch (error) {
+                console.error("❌ Error in chatbot request:", error);
+                document.getElementById("chatbox").innerHTML += `<p style="color:red;"><b>Error:</b> Chatbot request failed</p>`;
+            }
+        }
+
+        function handleEnter(event) {
+            if (event.key === "Enter") { 
+                askGPT();
+            }
+        }
+
+        function scrollToBottom() {
+            let chatbox = document.getElementById("chatbox");
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+    </script>
+
+</body>
+</html>
