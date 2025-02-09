@@ -16,9 +16,7 @@
 
         h2 {
             font-size: 2rem;
-            color: #fff; /* White text instead of neon */
-            text-shadow: none; /* Remove glow */
-            animation: none; /* Remove animation */
+            color: #fff;
         }
 
         /* 🏆 Chatbox */
@@ -128,6 +126,8 @@
     <button onclick="askGPT()">Send</button>
 
     <script>
+        const backendUrl = "https://chatbottableau-production.up.railway.app";  // ✅ Updated to use Railway backend
+
         document.addEventListener('DOMContentLoaded', function() {
             fetchWorkbooks();
             document.getElementById("workbookSelector").addEventListener("change", selectWorkbook);
@@ -135,7 +135,7 @@
 
         async function fetchWorkbooks() {
             try {
-                let response = await fetch("http://127.0.0.1:3000/get-workbooks", {
+                let response = await fetch(`${backendUrl}/get-workbooks`, {  // 🔥 Updated API
                     method: "GET",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include"
@@ -173,7 +173,7 @@
                 return;
             }
 
-            let response = await fetch("http://127.0.0.1:3000/select-workbook", {
+            let response = await fetch(`${backendUrl}/select-workbook`, {  // 🔥 Updated API
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ workbook_id: workbookId }),
@@ -192,9 +192,15 @@
         async function askGPT() {
             let queryInput = document.getElementById("queryInput");
             let query = queryInput.value.trim();
+            let workbookId = document.getElementById("workbookSelector").value;  // ✅ Ensure workbook is selected
 
             if (!query) {
                 alert("Please enter a question!");
+                return;
+            }
+
+            if (!workbookId) {
+                alert("Please select a workbook first!");
                 return;
             }
 
@@ -203,23 +209,24 @@
             queryInput.focus();
 
             try {
-                let response = await fetch("http://127.0.0.1:3000/chatbot", {
+                let response = await fetch(`${backendUrl}/chatbot`, {  // 🔥 Updated API
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query: query }),
+                    body: JSON.stringify({ 
+                        query: query, 
+                        workbook_id: workbookId  // ✅ Ensure workbook ID is sent
+                    }),
                     credentials: "include"
                 });
-
 
                 let data = await response.json();
 
                 if (data.error) {
+                    console.error("❌ Chatbot Error:", data.error);
                     document.getElementById("chatbox").innerHTML += `<p style="color:red;"><b>Error:</b> ${data.error}</p>`;
                 } else {
                     document.getElementById("chatbox").innerHTML += `<p><b>Bot:</b> ${data.response}</p>`;
                 }
-
-                scrollToBottom();
 
             } catch (error) {
                 console.error("❌ Error in chatbot request:", error);
