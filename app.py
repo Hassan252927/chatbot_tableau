@@ -298,7 +298,7 @@ def chatbot():
 
         return jsonify({"response": answer})
 
-    except openai.error.RateLimitError as e:
+    except openai.RateLimitError as e:
         print(f"🚨 OpenAI Rate Limit Error: {str(e)}")
         return jsonify({"response": "Sorry, I can't process this request due to token limits. Try a simpler query. 🥰"})
 
