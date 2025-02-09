@@ -208,7 +208,7 @@ def forecast():
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
     selected_workbook_id = session.get('selected_workbook_id')
-
+    print(f"⚠️ Debug: Session Data at chatbot request → {session}")
     if not selected_workbook_id:
         return jsonify({"error": "No workbook selected"}), 400
 
