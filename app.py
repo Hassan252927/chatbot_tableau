@@ -8,8 +8,23 @@ from flask_session import Session
 from io import StringIO
 from prophet import Prophet
 
+from flask import Flask, session
+from flask_session import Session
+from flask_cors import CORS
+
 app = Flask(__name__)
-CORS(app,supports_credentials=True)  # Enable CORS for frontend access
+
+# ✅ Correctly configure session storage
+app.config["SESSION_TYPE"] = "filesystem"  # Store sessions in a persistent filesystem
+app.config["SESSION_PERMANENT"] = False  # Ensure session does not expire immediately
+app.config["SESSION_USE_SIGNER"] = True  # Sign session cookies for security
+app.config["SESSION_COOKIE_SAMESITE"] = "None"  # Allow cross-origin session sharing
+app.config["SESSION_COOKIE_SECURE"] = True  # Required for HTTPS
+app.config["SECRET_KEY"] = "6f1e22b0a1b34d6fa9b2d5e3f8c48e14bcef3e9246b5d6d2b678901c345af8d6"  # Replace with a strong secret key
+
+Session(app)
+CORS(app, supports_credentials=True)
+
 app.secret_key = "d39c892a9ef547d2917a12c3e3e1bd078f7ef3a9ffb2edb6dd65a12cf8f2f61a"
 
 # OpenAI API Key
