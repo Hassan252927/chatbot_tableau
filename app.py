@@ -225,19 +225,22 @@ def chatbot():
     try:
         data = request.get_json()
 
-        # 🔍 Debug: Print incoming request body
+        # 🔍 Debug: Print full request body
         print("🟡 Incoming /chatbot request:", data)
 
-        if not data or "query" not in data:
-            return jsonify({"error": "Invalid request. 'query' is required."}), 400
+        if not data:
+            return jsonify({"error": "Invalid request. No data received."}), 400
 
-        # ✅ Get `workbook_id` either from request or session
+        if "query" not in data:
+            return jsonify({"error": "Missing 'query' in request."}), 400
+
+        # ✅ Extract `workbook_id`
         selected_workbook_id = data.get("workbook_id", session.get("selected_workbook_id"))
 
         if not selected_workbook_id:
             return jsonify({"error": "No workbook selected"}), 400
 
-        query = data.get("query", "").lower()
+        query = data["query"].strip().lower()
 
         print(f"📩 Query: {query}")
         print(f"🔍 Using Workbook ID: {selected_workbook_id}")
@@ -252,7 +255,7 @@ def chatbot():
 
         print(f"📊 Retrieved Workbook Data: {workbook_data}")
 
-        # OpenAI API Call (Updated for OpenAI v1.0)
+        # OpenAI API Call
         response = openai.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "system", "content": "You are a chatbot."},
@@ -269,8 +272,8 @@ def chatbot():
 
     except Exception as e:
         print(f"🚨 Chatbot Route Error: {str(e)}")
-        print(traceback.format_exc())
         return jsonify({"error": f"500 Internal Server Error: {str(e)}"}), 500
+
 
 
 
