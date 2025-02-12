@@ -11,7 +11,7 @@ import traceback
 import os
 from flask_cors import CORS
 
-ALLOWED_ORIGINS = ["https://chatbot-tableau-lm4m.vercel.app", "http://localhost:3000"]
+ALLOWED_ORIGINS = ["https://chatbot-tableau-lm4m.vercel.app", "http://127.0.0.1:5500/"]
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=ALLOWED_ORIGINS)  # ✅ Add Vercel frontend URL
