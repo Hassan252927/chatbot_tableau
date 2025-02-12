@@ -133,6 +133,8 @@
             document.getElementById("workbookSelector").addEventListener("change", selectWorkbook);
         });
 
+        const API_BASE = "https://chatbottableau-production-016f.up.railway.app"; // ✅ Define API base URL
+
         async function fetchWorkbooks() {
             try {
                 let response = await fetch("https://chatbottableau-production-016f.up.railway.app/get-workbooks", {
@@ -189,12 +191,18 @@
             }
         }
 
- async function askGPT() {
+
+async function askGPT() {
     let queryInput = document.getElementById("queryInput");
     let query = queryInput.value.trim();
+    let workbookId = localStorage.getItem("selectedWorkbook"); // ✅ Get workbook ID
 
     if (!query) {
         alert("Please enter a question!");
+        return;
+    }
+    if (!workbookId) {
+        alert("⚠️ Please select a workbook first!");
         return;
     }
 
@@ -202,23 +210,25 @@
     queryInput.value = "";
     queryInput.focus();
 
+    let requestBody = { query: query, workbook_id: workbookId }; // ✅ Ensure workbook_id is sent
+    console.log("🟡 Sending request to /chatbot:", requestBody);
+
     try {
-        let response = await fetch("https://chatbottableau-production-016f.up.railway.app/chatbot", {
+        let response = await fetch(`${API_BASE}/chatbot`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: query }),  // 🔹 Send the query properly
+            body: JSON.stringify(requestBody),
             credentials: "include"
         });
 
         let data = await response.json();
+        console.log("🟢 Response from /chatbot:", data);
 
         if (data.error) {
             document.getElementById("chatbox").innerHTML += `<p style="color:red;"><b>Error:</b> ${data.error}</p>`;
         } else {
             document.getElementById("chatbox").innerHTML += `<p><b>Bot:</b> ${data.response}</p>`;
         }
-
-        scrollToBottom();
 
     } catch (error) {
         console.error("❌ Error in chatbot request:", error);
