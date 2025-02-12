@@ -7,6 +7,8 @@ import xml.etree.ElementTree as ET
 from flask_session import Session
 from io import StringIO
 from prophet import Prophet
+import traceback
+
 
 app = Flask(__name__)
 CORS(app,supports_credentials=True)  # Enable CORS for frontend access
@@ -204,89 +206,51 @@ def forecast():
     except Exception as e:
         return jsonify({"error": f"500 Internal Server Error: {str(e)}"}), 500
 
-
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
-    selected_workbook_id = session.get('selected_workbook_id')
-
-    if not selected_workbook_id:
-        return jsonify({"error": "No workbook selected"}), 400
-
-    query = request.json.get("query", "").lower()
-    print(f"\n📩 Query: {query}")
-    print(f"🔍 Fetching Data for Workbook ID: {selected_workbook_id}")
-
-    workbook_data, error = fetch_tableau_data(selected_workbook_id)
-
-    if error:
-        return jsonify({"error": error}), 500
-
-    if not workbook_data:
-        return jsonify({"response": "No relevant data found in Tableau."})
-
-    # ✅ Step 1: Check for Time-Series Data (Forecasting)
-    for view_name, records in workbook_data.items():
-        print(f"📊 Checking {view_name} for forecasting...")
-
-        time_series_data = [
-            {"ds": record["date"], "y": record["value"]}
-            for record in records
-            if "date" in record and "value" in record
-        ]
-    
-        if time_series_data:
-            print(f"✅ Time-series data detected in {view_name}: {time_series_data[:5]}")  # Print first 5 records for debugging
-            forecast_result = generate_forecast(time_series_data, periods=30)
-            print(f"🔮 Forecast generated: {forecast_result[:5]}")  # Print first 5 forecasted points
-            return jsonify({"forecast": forecast_result})
-
-    print("⚠️ No time-series data found for forecasting!")
-
-    # ✅ Step 2: Otherwise, Process General Query
-    filtered_data = {}
-
-    for view_name, records in workbook_data.items():
-        if "name starts with" in query:  
-            letter = query.split("starts with")[-1].strip().upper()[0]
-            filtered_records = [record for record in records if "User" in record and record["User"].startswith(letter)]
-            filtered_data[view_name] = filtered_records
-        else:
-            filtered_data[view_name] = records  
-
-    MAX_RECORDS = 60  
-    data_str = ""
-
-    for view_name, records in filtered_data.items():
-        limited_records = records[:MAX_RECORDS]
-        data_str += f"\nView: {view_name}\n"
-        for record in limited_records:  
-            data_str += f"{record}\n"  
-
-    print(f"\n📊 Data Sent to GPT (Limited to {MAX_RECORDS} records per view):\n{data_str}")
-
-    # ✅ Step 3: Construct Messages for OpenAI
-    messages = [
-        {"role": "system", "content": "You are a data analyst answering queries based on Tableau workbook data."},
-        {"role": "user", "content": f"Data:\n{data_str}\n\nQuestion: {query}\nAnswer:"}
-    ]
-
     try:
-    response = openai.chat.completions.create(
-    model="gpt-4o",
-    messages=messages,
-    max_tokens=1500,
-    temperature=0
-)
+        selected_workbook_id = session.get('selected_workbook_id')
 
+        if not selected_workbook_id:
+            return jsonify({"error": "No workbook selected"}), 400
 
-        answer = response["choices"][0]["message"]["content"].strip()
-        print(f"🟢 GPT Response: {answer}")
+        query = request.json.get("query", "").lower()
+        print(f"\n📩 Query: {query}")
+        print(f"🔍 Fetching Data for Workbook ID: {selected_workbook_id}")
 
-        return jsonify({"response": answer})
+        workbook_data, error = fetch_tableau_data(selected_workbook_id)
 
-    except openai.error.RateLimitError as e:
-        print(f"🚨 OpenAI Rate Limit Error: {str(e)}")
-        return jsonify({"response": "Sorry, I can't process this request due to token limits. Try a simpler query. 🥰"})
+        if error:
+            return jsonify({"error": error}), 500
+
+        if not workbook_data:
+            return jsonify({"response": "No relevant data found in Tableau."})
+
+        # ✅ Debugging Output
+        print(f"📊 Retrieved Workbook Data: {workbook_data}")
+
+        # OpenAI API Call (Updated for OpenAI v1.0)
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a chatbot."},
+                {"role": "user", "content": query}
+            ],
+            max_tokens=1500,
+            temperature=0
+        )
+
+        bot_response = response.choices[0].message.content.strip()
+
+        print(f"🟢 GPT Response: {bot_response}")
+
+        return jsonify({"response": bot_response})
+
+    except Exception as e:
+        print(f"🚨 Chatbot Route Error: {str(e)}")
+        print(traceback.format_exc())  # Print full error traceback for debugging
+        return jsonify({"error": f"500 Internal Server Error: {str(e)}"}), 500
+
 
 
 
