@@ -9,10 +9,15 @@ from io import StringIO
 from prophet import Prophet
 import traceback
 import os
+from flask_cors import CORS
+
+ALLOWED_ORIGINS = ["https://chatbot-tableau-lm4m.vercel.app", "http://localhost:3000"]
 
 app = Flask(__name__)
-CORS(app,supports_credentials=True)  # Enable CORS for frontend access
+CORS(app, supports_credentials=True, origins=ALLOWED_ORIGINS)  # ✅ Add Vercel frontend URL
 app.secret_key = "d39c892a9ef547d2917a12c3e3e1bd078f7ef3a9ffb2edb6dd65a12cf8f2f61a"
+
+
 
 # OpenAI API Key
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -66,6 +71,15 @@ def get_tableau_auth_token():
         print(f"❌ XML Parsing Error: {e}")
         return None
 
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin")
+    if origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+    response.headers["Access-Control-Allow-Credentials"] = "true"  # ✅ Allow cookies
+    return response
 
 
 def fetch_tableau_data(workbook_id):
