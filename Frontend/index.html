@@ -137,7 +137,7 @@
 
         async function fetchWorkbooks() {
             try {
-                let response = await fetch("chatbottableau-production-d029.up.railway.app/get-workbooks", {
+                let response = await fetch("chatbottableau-production-016f.up.railway.app/get-workbooks", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include"
@@ -175,7 +175,7 @@
                 return;
             }
 
-            let response = await fetch("chatbottableau-production-d029.up.railway.app/select-workbook", {
+            let response = await fetch("chatbottableau-production-016f.up.railway.app/select-workbook", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ workbook_id: workbookId }),
