@@ -15,7 +15,7 @@ CORS(app,supports_credentials=True)  # Enable CORS for frontend access
 app.secret_key = "d39c892a9ef547d2917a12c3e3e1bd078f7ef3a9ffb2edb6dd65a12cf8f2f61a"
 
 # OpenAI API Key
-openai.api_key = "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"  # Replace with your OpenAI API key
+openai.api_key = "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"  # Replace with your OpenAI API key
 
 # Tableau API Configuration
 TABLEAU_SERVER = "https://dub01.online.tableau.com"
