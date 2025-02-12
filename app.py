@@ -223,14 +223,24 @@ def forecast():
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
     try:
-        selected_workbook_id = session.get('selected_workbook_id')
+        data = request.get_json()
+
+        # 🔍 Debug: Print incoming request body
+        print("🟡 Incoming /chatbot request:", data)
+
+        if not data or "query" not in data:
+            return jsonify({"error": "Invalid request. 'query' is required."}), 400
+
+        # ✅ Get `workbook_id` either from request or session
+        selected_workbook_id = data.get("workbook_id", session.get("selected_workbook_id"))
 
         if not selected_workbook_id:
             return jsonify({"error": "No workbook selected"}), 400
 
-        query = request.json.get("query", "").lower()
-        print(f"\n📩 Query: {query}")
-        print(f"🔍 Fetching Data for Workbook ID: {selected_workbook_id}")
+        query = data.get("query", "").lower()
+
+        print(f"📩 Query: {query}")
+        print(f"🔍 Using Workbook ID: {selected_workbook_id}")
 
         workbook_data, error = fetch_tableau_data(selected_workbook_id)
 
@@ -240,16 +250,13 @@ def chatbot():
         if not workbook_data:
             return jsonify({"response": "No relevant data found in Tableau."})
 
-        # ✅ Debugging Output
         print(f"📊 Retrieved Workbook Data: {workbook_data}")
 
         # OpenAI API Call (Updated for OpenAI v1.0)
         response = openai.chat.completions.create(
             model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a chatbot."},
-                {"role": "user", "content": query}
-            ],
+            messages=[{"role": "system", "content": "You are a chatbot."},
+                      {"role": "user", "content": query}],
             max_tokens=1500,
             temperature=0
         )
@@ -262,8 +269,9 @@ def chatbot():
 
     except Exception as e:
         print(f"🚨 Chatbot Route Error: {str(e)}")
-        print(traceback.format_exc())  # Print full error traceback for debugging
+        print(traceback.format_exc())
         return jsonify({"error": f"500 Internal Server Error: {str(e)}"}), 500
+
 
 
 
