@@ -8,7 +8,7 @@ from flask_session import Session
 from io import StringIO
 from prophet import Prophet
 import traceback
-
+import os
 
 app = Flask(__name__)
 CORS(app,supports_credentials=True)  # Enable CORS for frontend access
