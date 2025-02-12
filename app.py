@@ -8,27 +8,12 @@ from flask_session import Session
 from io import StringIO
 from prophet import Prophet
 
-from flask import Flask, session
-from flask_session import Session
-from flask_cors import CORS
-
 app = Flask(__name__)
-
-# ✅ Correctly configure session storage
-app.config["SESSION_TYPE"] = "filesystem"  # Store sessions in a persistent filesystem
-app.config["SESSION_PERMANENT"] = False  # Ensure session does not expire immediately
-app.config["SESSION_USE_SIGNER"] = True  # Sign session cookies for security
-app.config["SESSION_COOKIE_SAMESITE"] = "None"  # Allow cross-origin session sharing
-app.config["SESSION_COOKIE_SECURE"] = True  # Required for HTTPS
-app.config["SECRET_KEY"] = "6f1e22b0a1b34d6fa9b2d5e3f8c48e14bcef3e9246b5d6d2b678901c345af8d6"  # Replace with a strong secret key
-
-Session(app)
-CORS(app, supports_credentials=True)
-
+CORS(app,supports_credentials=True)  # Enable CORS for frontend access
 app.secret_key = "d39c892a9ef547d2917a12c3e3e1bd078f7ef3a9ffb2edb6dd65a12cf8f2f61a"
 
 # OpenAI API Key
-openai.api_key = "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"  # Replace with your OpenAI API key
+openai.api_key = "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"  # Replace with your OpenAI API key
 
 # Tableau API Configuration
 TABLEAU_SERVER = "https://dub01.online.tableau.com"
@@ -223,7 +208,7 @@ def forecast():
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
     selected_workbook_id = session.get('selected_workbook_id')
-    print(f"⚠️ Debug: Session Data at chatbot request → {session}")
+
     if not selected_workbook_id:
         return jsonify({"error": "No workbook selected"}), 400
 
@@ -298,7 +283,7 @@ def chatbot():
 
         return jsonify({"response": answer})
 
-    except openai.RateLimitError as e:
+    except openai.error.RateLimitError as e:
         print(f"🚨 OpenAI Rate Limit Error: {str(e)}")
         return jsonify({"response": "Sorry, I can't process this request due to token limits. Try a simpler query. 🥰"})
 
