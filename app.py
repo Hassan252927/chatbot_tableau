@@ -271,12 +271,13 @@ def chatbot():
     ]
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            messages=messages,
-            max_tokens=1500,
-            temperature=0
-        )
+    response = openai.chat.completions.create(
+    model="gpt-4o",
+    messages=messages,
+    max_tokens=1500,
+    temperature=0
+)
+
 
         answer = response["choices"][0]["message"]["content"].strip()
         print(f"🟢 GPT Response: {answer}")
