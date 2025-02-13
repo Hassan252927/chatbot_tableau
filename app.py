@@ -225,16 +225,11 @@ def chatbot():
     try:
         data = request.get_json()
 
-        # 🔍 Debug: Print full request body
         print("🟡 Incoming /chatbot request:", data)
 
-        if not data:
+        if not data or "query" not in data:
             return jsonify({"error": "Invalid request. No data received."}), 400
 
-        if "query" not in data:
-            return jsonify({"error": "Missing 'query' in request."}), 400
-
-        # ✅ Extract `workbook_id`
         selected_workbook_id = data.get("workbook_id", session.get("selected_workbook_id"))
 
         if not selected_workbook_id:
@@ -245,6 +240,7 @@ def chatbot():
         print(f"📩 Query: {query}")
         print(f"🔍 Using Workbook ID: {selected_workbook_id}")
 
+        # Fetch workbook data
         workbook_data, error = fetch_tableau_data(selected_workbook_id)
 
         if error:
@@ -255,11 +251,19 @@ def chatbot():
 
         print(f"📊 Retrieved Workbook Data: {workbook_data}")
 
-        # OpenAI API Call
+        # Convert workbook data to a readable format for GPT
+        workbook_context = "\n".join(
+            [f"{sheet}: {records}" for sheet, records in workbook_data.items()]
+        )
+
+        # 🔹 Improved OpenAI Request with Context
         response = openai.chat.completions.create(
             model="gpt-4o",
-            messages=[{"role": "system", "content": "You are a chatbot."},
-                      {"role": "user", "content": query}],
+            messages=[
+                {"role": "system", "content": "You are an AI chatbot with access to workbook data."},
+                {"role": "system", "content": f"Workbook Data:\n{workbook_context}"},
+                {"role": "user", "content": query}
+            ],
             max_tokens=1500,
             temperature=0
         )
@@ -273,6 +277,7 @@ def chatbot():
     except Exception as e:
         print(f"🚨 Chatbot Route Error: {str(e)}")
         return jsonify({"error": f"500 Internal Server Error: {str(e)}"}), 500
+
 
 
 
