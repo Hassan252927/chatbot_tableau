@@ -11,10 +11,20 @@ import traceback
 import os
 from flask_cors import CORS
 
-ALLOWED_ORIGINS = ["https://chatbot-tableau-lm4m.vercel.app/", "http://127.0.0.1:5500"]
+ALLOWED_ORIGINS = ["https://chatbot-tableau-lm4m.vercel.app", "http://127.0.0.1:5500"]
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=ALLOWED_ORIGINS)  # ✅ Add Vercel frontend URL
+CORS(app, resources={r"/*": {"origins": ALLOWED_ORIGINS}}, supports_credentials=True)  # ✅ Fixed CORS setup
+
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin")
+    response.headers["Access-Control-Allow-Origin"] = origin if origin in ALLOWED_ORIGINS else "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+    response.headers["Access-Control-Allow-Credentials"] = "true"  # ✅ Allow cookies
+    return response
+
 app.secret_key = "d39c892a9ef547d2917a12c3e3e1bd078f7ef3a9ffb2edb6dd65a12cf8f2f61a"
 
 
@@ -70,16 +80,6 @@ def get_tableau_auth_token():
     except ET.ParseError as e:
         print(f"❌ XML Parsing Error: {e}")
         return None
-
-@app.after_request
-def add_cors_headers(response):
-    origin = request.headers.get("Origin")
-    if origin in ALLOWED_ORIGINS:
-        response.headers["Access-Control-Allow-Origin"] = origin
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
-    response.headers["Access-Control-Allow-Credentials"] = "true"  # ✅ Allow cookies
-    return response
 
 
 def fetch_tableau_data(workbook_id):
