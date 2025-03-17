@@ -9,7 +9,6 @@ from io import StringIO
 from prophet import Prophet
 import traceback
 import os
-from flask_cors import CORS
 
 ALLOWED_ORIGINS = ["https://chatbot-tableau.vercel.app", "http://127.0.0.1:5500"]
 
